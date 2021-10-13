@@ -1,30 +1,27 @@
 pipeline {
   agent any
   stages {
-    stage('Unit Test') {
+    //MAVEN is name given in global tool configuration
+    //install plugins: pipeline and pipeline maven integration
+    stage('Compile Stage') {
       steps {
-        sh 'mvn clean test'
+        withMaven(maven: 'MAVEN') {
+          bat 'mvn clean compile'
+        }
       }
     }
-    stage('Deploy Standalone') {
+    stage('Testing Stage') {
       steps {
-        sh 'mvn deploy -P standalone'
+        withMaven(maven: 'MAVEN') {
+          bat 'mvn test'
+        }
       }
     }
-    stage('Deploy AnyPoint') {
-      environment {
-        ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-      }
+    stage('Install Stage') {
       steps {
-        sh 'mvn deploy -P arm -Darm.target.name=local-4.0.0-ee -Danypoint.username=${ANYPOINT_CREDENTIALS_USR}  -Danypoint.password=${ANYPOINT_CREDENTIALS_PSW}'
-      }
-    }
-    stage('Deploy CloudHub') {
-      environment {
-        ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-      }
-      steps {
-        sh 'mvn deploy -P cloudhub -Dmule.version=4.0.0 -Danypoint.username=${ANYPOINT_CREDENTIALS_USR} -Danypoint.password=${ANYPOINT_CREDENTIALS_PSW}'
+        withMaven(maven: 'MAVEN') {
+          bat 'mvn install'
+        }
       }
     }
   }
